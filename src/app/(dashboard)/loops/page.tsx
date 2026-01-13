@@ -390,8 +390,8 @@ export default function LoopsPage() {
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); toggleLoop(loop.id) }}
                                                 className={`p-2 rounded-lg transition-colors ${loop.isActive
-                                                        ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
-                                                        : 'bg-[var(--surface)] text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)]'
+                                                    ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
+                                                    : 'bg-[var(--surface)] text-[var(--foreground-muted)] hover:bg-[var(--surface-hover)]'
                                                     }`}
                                                 title={loop.isActive ? 'Pause loop' : 'Activate loop'}
                                             >
@@ -477,6 +477,88 @@ export default function LoopsPage() {
                             )}
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Week Preview - The Mixer */}
+            {loops.length > 0 && (
+                <div className="card p-6 mt-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-[var(--foreground)] flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-[var(--primary)]" />
+                                Week Preview
+                            </h2>
+                            <p className="text-sm text-[var(--foreground-muted)]">
+                                How your loops combine into a daily schedule
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Days of the week */}
+                    <div className="grid grid-cols-7 gap-2">
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, dayIdx) => {
+                            // Calculate which loops would post on this day based on rotation
+                            const postsForDay = loops
+                                .filter(loop => loop.isActive && loop.items.length > 0)
+                                .filter(loop => {
+                                    if (loop.rotationDays === 0) return false // Manual loops
+                                    if (loop.rotationDays === 1) return true // Daily
+                                    return dayIdx % loop.rotationDays === 0 // Rotation check
+                                })
+
+                            return (
+                                <div key={day} className="text-center">
+                                    <div className="text-xs font-medium text-[var(--foreground-muted)] mb-2">
+                                        {day}
+                                    </div>
+                                    <div className="min-h-[100px] bg-[var(--surface)] rounded-xl p-2 space-y-1">
+                                        {postsForDay.length === 0 ? (
+                                            <div className="text-xs text-[var(--foreground-muted)] opacity-50 pt-8">
+                                                No posts
+                                            </div>
+                                        ) : (
+                                            postsForDay.map(loop => (
+                                                <div
+                                                    key={loop.id}
+                                                    className="text-xs px-2 py-1.5 rounded-lg truncate"
+                                                    style={{
+                                                        background: `${loop.color}20`,
+                                                        color: loop.color
+                                                    }}
+                                                    title={`${loop.emoji} ${loop.name}`}
+                                                >
+                                                    {loop.emoji} {loop.name}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 mt-6 pt-6 border-t border-[var(--surface-border)]">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500" />
+                            <span className="text-sm text-[var(--foreground-muted)]">
+                                {loops.filter(l => l.isActive).length} active loops
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <RefreshCw className="w-3 h-3 text-[var(--foreground-muted)]" />
+                            <span className="text-sm text-[var(--foreground-muted)]">
+                                {loops.reduce((acc, l) => acc + l.items.length, 0)} total content items
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-[var(--foreground-muted)]" />
+                            <span className="text-sm text-[var(--foreground-muted)]">
+                                ~{Math.round(loops.filter(l => l.isActive && l.rotationDays > 0).reduce((acc, l) => acc + (7 / l.rotationDays), 0))} posts/week
+                            </span>
+                        </div>
+                    </div>
                 </div>
             )}
 
