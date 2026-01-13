@@ -18,7 +18,8 @@ import {
     User,
     Loader2,
     Target,
-    MessageCircle
+    MessageCircle,
+    RefreshCw
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -28,6 +29,7 @@ interface SidebarProps {
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/projects', label: 'Projects', icon: FolderKanban },
+    { href: '/loops', label: 'Content Loops', icon: RefreshCw },
     { href: '/strategy', label: 'Content Strategy', icon: Target },
     { href: '/weekly', label: 'Generate Content', icon: CalendarDays },
     { href: '/engagement', label: 'Engagement', icon: MessageCircle },
