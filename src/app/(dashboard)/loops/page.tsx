@@ -22,7 +22,9 @@ import {
     X,
     Check,
     Clock,
-    Calendar
+    Calendar,
+    ExternalLink,
+    Link2
 } from 'lucide-react'
 import { Project } from '@/lib/supabase/types'
 
@@ -43,10 +45,14 @@ interface ContentLoop {
 interface LoopItem {
     id: string
     title: string
+    url?: string
+    summary?: string
+    keyPoints?: string[]
     content: string
     type: 'article' | 'post' | 'cta' | 'spotlight'
     lastUsed?: string
     usageCount: number
+    previousPosts?: string[] // Track generated posts to avoid repetition
 }
 
 // Preset loop templates
@@ -108,10 +114,13 @@ export default function LoopsPage() {
     const [showNewLoopModal, setShowNewLoopModal] = useState(false)
     const [showAddContentModal, setShowAddContentModal] = useState<string | null>(null)
     const [expandedLoop, setExpandedLoop] = useState<string | null>(null)
+    const [scrapingUrl, setScrapingUrl] = useState(false)
 
     // New content form
     const [newContent, setNewContent] = useState({
+        url: '',
         title: '',
+        summary: '',
         content: '',
         type: 'article' as const
     })
@@ -200,9 +209,12 @@ export default function LoopsPage() {
         const newItem: LoopItem = {
             id: crypto.randomUUID(),
             title: newContent.title,
+            url: newContent.url || undefined,
+            summary: newContent.summary || undefined,
             content: newContent.content,
             type: newContent.type,
-            usageCount: 0
+            usageCount: 0,
+            previousPosts: []
         }
 
         const updatedLoops = loops.map(loop =>
@@ -212,7 +224,7 @@ export default function LoopsPage() {
         )
 
         saveLoops(updatedLoops)
-        setNewContent({ title: '', content: '', type: 'article' })
+        setNewContent({ url: '', title: '', summary: '', content: '', type: 'article' })
         setShowAddContentModal(null)
     }
 
@@ -223,6 +235,35 @@ export default function LoopsPage() {
                 : loop
         )
         saveLoops(updatedLoops)
+    }
+
+    // Scrape URL to extract title and summary
+    const scrapeUrl = async (url: string) => {
+        if (!url.trim()) return
+
+        setScrapingUrl(true)
+        try {
+            // Call our API to scrape the URL
+            const response = await fetch('/api/scrape-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setNewContent(prev => ({
+                    ...prev,
+                    title: data.title || prev.title,
+                    summary: data.summary || data.description || '',
+                    content: data.content || ''
+                }))
+            }
+        } catch (err) {
+            console.error('Error scraping URL:', err)
+        } finally {
+            setScrapingUrl(false)
+        }
     }
 
     const getNextPostDate = (loop: ContentLoop) => {
@@ -451,15 +492,34 @@ export default function LoopsPage() {
                                                         {idx + 1}.
                                                     </span>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-medium text-[var(--foreground)] truncate">
-                                                            {item.title}
-                                                        </p>
-                                                        {item.content && (
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-medium text-[var(--foreground)] truncate">
+                                                                {item.title}
+                                                            </p>
+                                                            {item.url && (
+                                                                <a
+                                                                    href={item.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    className="p-1 hover:bg-[var(--primary)]/20 rounded text-[var(--primary)]"
+                                                                    title="Open article"
+                                                                >
+                                                                    <ExternalLink className="w-3 h-3" />
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                        {(item.summary || item.content) && (
                                                             <p className="text-sm text-[var(--foreground-muted)] truncate">
-                                                                {item.content}
+                                                                {item.summary || item.content}
                                                             </p>
                                                         )}
                                                     </div>
+                                                    {item.url && (
+                                                        <span title="Has URL">
+                                                            <Link2 className="w-4 h-4 text-[var(--primary)]" />
+                                                        </span>
+                                                    )}
                                                     <span className="text-xs text-[var(--foreground-muted)]">
                                                         Used {item.usageCount}x
                                                     </span>
@@ -631,6 +691,37 @@ export default function LoopsPage() {
                         </div>
 
                         <div className="p-6 space-y-4">
+                            {/* URL Input */}
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                                    Article URL (optional)
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="url"
+                                        value={newContent.url}
+                                        onChange={(e) => setNewContent({ ...newContent, url: e.target.value })}
+                                        placeholder="https://docs.getsuite.app/article..."
+                                        className="flex-1 px-4 py-2 bg-[var(--background)] border border-[var(--surface-border)] rounded-lg text-[var(--foreground)]"
+                                    />
+                                    <button
+                                        onClick={() => scrapeUrl(newContent.url)}
+                                        disabled={!newContent.url.trim() || scrapingUrl}
+                                        className="btn btn-secondary px-4"
+                                    >
+                                        {scrapingUrl ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            'Fetch'
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-[var(--foreground-muted)] mt-1">
+                                    Add a URL and click Fetch to auto-fill title & summary
+                                </p>
+                            </div>
+
+                            {/* Title */}
                             <div>
                                 <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
                                     Title
@@ -644,15 +735,30 @@ export default function LoopsPage() {
                                 />
                             </div>
 
+                            {/* Summary */}
                             <div>
                                 <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                                    Content (optional)
+                                    Summary
+                                </label>
+                                <textarea
+                                    value={newContent.summary}
+                                    onChange={(e) => setNewContent({ ...newContent, summary: e.target.value })}
+                                    placeholder="Brief description of what this article covers..."
+                                    rows={2}
+                                    className="w-full px-4 py-2 bg-[var(--background)] border border-[var(--surface-border)] rounded-lg text-[var(--foreground)] resize-none"
+                                />
+                            </div>
+
+                            {/* Key Points / Content */}
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                                    Key Points (optional)
                                 </label>
                                 <textarea
                                     value={newContent.content}
                                     onChange={(e) => setNewContent({ ...newContent, content: e.target.value })}
-                                    placeholder="The full post or article text..."
-                                    rows={4}
+                                    placeholder="Main talking points for when AI generates posts..."
+                                    rows={3}
                                     className="w-full px-4 py-2 bg-[var(--background)] border border-[var(--surface-border)] rounded-lg text-[var(--foreground)] resize-none"
                                 />
                             </div>
