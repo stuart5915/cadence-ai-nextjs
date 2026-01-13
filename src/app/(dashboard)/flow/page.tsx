@@ -219,65 +219,70 @@ export default function FlowPage() {
     return (
         <div className="min-h-screen p-6 max-w-4xl mx-auto">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[var(--foreground)]">Content Flow</h1>
-                <p className="text-[var(--foreground-muted)]">
-                    Select a project, review your strategy, and generate content
-                </p>
+            <div className="mb-8 flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-[var(--foreground)]">Content Flow</h1>
+                    <p className="text-[var(--foreground-muted)]">
+                        Select a project, review your strategy, and generate content
+                    </p>
+                </div>
+                {currentStep !== 'projects' && (
+                    <button
+                        onClick={() => goToStep('projects')}
+                        className="btn btn-ghost text-sm"
+                    >
+                        ↺ Start Over
+                    </button>
+                )}
             </div>
 
             {/* Flow Progress */}
             <div className="flex items-center gap-2 mb-8 p-4 bg-[var(--surface)] rounded-xl">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    currentStep === 'projects' 
-                        ? 'bg-[var(--primary)] text-white' 
-                        : completedSteps.includes('projects')
-                            ? 'bg-green-500/20 text-green-500'
-                            : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
-                }`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${currentStep === 'projects'
+                    ? 'bg-[var(--primary)] text-white'
+                    : completedSteps.includes('projects')
+                        ? 'bg-green-500/20 text-green-500'
+                        : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
+                    }`}>
                     {completedSteps.includes('projects') ? <Check className="w-4 h-4" /> : <FolderOpen className="w-4 h-4" />}
                     Project
                 </div>
                 <ArrowRight className="w-4 h-4 text-[var(--foreground-muted)]" />
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    currentStep === 'strategy' 
-                        ? 'bg-[var(--primary)] text-white' 
-                        : completedSteps.includes('strategy')
-                            ? 'bg-green-500/20 text-green-500'
-                            : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
-                }`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${currentStep === 'strategy'
+                    ? 'bg-[var(--primary)] text-white'
+                    : completedSteps.includes('strategy')
+                        ? 'bg-green-500/20 text-green-500'
+                        : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
+                    }`}>
                     {completedSteps.includes('strategy') ? <Check className="w-4 h-4" /> : <Target className="w-4 h-4" />}
                     Strategy
                 </div>
                 <ArrowRight className="w-4 h-4 text-[var(--foreground-muted)]" />
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    currentStep === 'generate' 
-                        ? 'bg-[var(--primary)] text-white' 
-                        : completedSteps.includes('generate')
-                            ? 'bg-green-500/20 text-green-500'
-                            : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
-                }`}>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${currentStep === 'generate'
+                    ? 'bg-[var(--primary)] text-white'
+                    : completedSteps.includes('generate')
+                        ? 'bg-green-500/20 text-green-500'
+                        : 'bg-[var(--surface-hover)] text-[var(--foreground-muted)]'
+                    }`}>
                     {completedSteps.includes('generate') ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                     Generate
                 </div>
             </div>
 
             {/* STEP 1: Projects Panel */}
-            <div className={`card mb-4 overflow-hidden transition-all duration-300 ${
-                currentStep === 'projects' ? 'p-6' : 'p-4'
-            }`}>
+            <div className={`card mb-4 overflow-hidden transition-all duration-300 ${currentStep === 'projects' ? 'p-6' : 'p-4'
+                }`}>
                 {/* Panel Header - Always visible */}
-                <div 
+                <div
                     className={`flex items-center justify-between ${currentStep !== 'projects' ? 'cursor-pointer' : ''}`}
                     onClick={() => currentStep !== 'projects' && goToStep('projects')}
                 >
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            completedSteps.includes('projects') 
-                                ? 'bg-green-500/20' 
-                                : 'bg-[var(--primary)]/20'
-                        }`}>
-                            {completedSteps.includes('projects') 
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${completedSteps.includes('projects')
+                            ? 'bg-green-500/20'
+                            : 'bg-[var(--primary)]/20'
+                            }`}>
+                            {completedSteps.includes('projects')
                                 ? <CheckCircle2 className="w-5 h-5 text-green-500" />
                                 : <FolderOpen className="w-5 h-5 text-[var(--primary)]" />
                             }
@@ -304,7 +309,7 @@ export default function FlowPage() {
                         {projects.length === 0 ? (
                             <div className="text-center py-8">
                                 <p className="text-[var(--foreground-muted)] mb-4">No projects yet</p>
-                                <button 
+                                <button
                                     onClick={() => router.push('/projects/new')}
                                     className="btn btn-primary"
                                 >
@@ -344,21 +349,19 @@ export default function FlowPage() {
 
             {/* STEP 2: Strategy Panel */}
             {(currentStep === 'strategy' || completedSteps.includes('strategy')) && (
-                <div className={`card mb-4 overflow-hidden transition-all duration-300 ${
-                    currentStep === 'strategy' ? 'p-6' : 'p-4'
-                }`}>
+                <div className={`card mb-4 overflow-hidden transition-all duration-300 ${currentStep === 'strategy' ? 'p-6' : 'p-4'
+                    }`}>
                     {/* Panel Header */}
-                    <div 
+                    <div
                         className={`flex items-center justify-between ${currentStep !== 'strategy' ? 'cursor-pointer' : ''}`}
                         onClick={() => currentStep !== 'strategy' && completedSteps.includes('strategy') && goToStep('strategy')}
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                completedSteps.includes('strategy') 
-                                    ? 'bg-green-500/20' 
-                                    : 'bg-[var(--primary)]/20'
-                            }`}>
-                                {completedSteps.includes('strategy') 
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${completedSteps.includes('strategy')
+                                ? 'bg-green-500/20'
+                                : 'bg-[var(--primary)]/20'
+                                }`}>
+                                {completedSteps.includes('strategy')
                                     ? <CheckCircle2 className="w-5 h-5 text-green-500" />
                                     : <Target className="w-5 h-5 text-[var(--primary)]" />
                                 }
@@ -434,11 +437,10 @@ export default function FlowPage() {
                                         return (
                                             <div
                                                 key={idx}
-                                                className={`h-10 p-1 rounded transition-all flex flex-col items-center justify-center ${
-                                                    theme ? '' : isToday 
-                                                        ? 'bg-[var(--primary)]/10 border border-[var(--primary)]/30' 
-                                                        : 'bg-[var(--background)]'
-                                                }`}
+                                                className={`h-10 p-1 rounded transition-all flex flex-col items-center justify-center ${theme ? '' : isToday
+                                                    ? 'bg-[var(--primary)]/10 border border-[var(--primary)]/30'
+                                                    : 'bg-[var(--background)]'
+                                                    }`}
                                                 style={theme ? {
                                                     background: `${theme.color}15`,
                                                     borderLeft: `2px solid ${theme.color}`
@@ -471,17 +473,15 @@ export default function FlowPage() {
 
             {/* STEP 3: Generate Panel */}
             {(currentStep === 'generate' || completedSteps.includes('generate')) && (
-                <div className={`card mb-4 overflow-hidden transition-all duration-300 ${
-                    currentStep === 'generate' ? 'p-6' : 'p-4'
-                }`}>
+                <div className={`card mb-4 overflow-hidden transition-all duration-300 ${currentStep === 'generate' ? 'p-6' : 'p-4'
+                    }`}>
                     {/* Panel Header */}
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            completedSteps.includes('generate') 
-                                ? 'bg-green-500/20' 
-                                : 'bg-[var(--primary)]/20'
-                        }`}>
-                            {completedSteps.includes('generate') 
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${completedSteps.includes('generate')
+                            ? 'bg-green-500/20'
+                            : 'bg-[var(--primary)]/20'
+                            }`}>
+                            {completedSteps.includes('generate')
                                 ? <CheckCircle2 className="w-5 h-5 text-green-500" />
                                 : <Sparkles className="w-5 h-5 text-[var(--primary)]" />
                             }
@@ -518,11 +518,10 @@ export default function FlowPage() {
                                             <button
                                                 key={num}
                                                 onClick={() => setPostsPerDay(num)}
-                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                                                    postsPerDay === num
-                                                        ? 'bg-[var(--primary)] text-white'
-                                                        : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]'
-                                                }`}
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${postsPerDay === num
+                                                    ? 'bg-[var(--primary)] text-white'
+                                                    : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]'
+                                                    }`}
                                             >
                                                 {num}
                                             </button>
@@ -547,11 +546,10 @@ export default function FlowPage() {
                                                                 : [...prev, platform]
                                                         )
                                                     }}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                                                        selectedPlatforms.includes(platform)
-                                                            ? 'bg-[var(--primary)] text-white'
-                                                            : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]'
-                                                    }`}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${selectedPlatforms.includes(platform)
+                                                        ? 'bg-[var(--primary)] text-white'
+                                                        : 'bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]'
+                                                        }`}
                                                 >
                                                     <PlatformIcon platform={platform} size={16} colored={selectedPlatforms.includes(platform) ? false : true} />
                                                     {PLATFORM_NAMES[platform] || platform}
@@ -610,6 +608,17 @@ export default function FlowPage() {
                                     Go to Queue
                                 </button>
                             </div>
+                            <button
+                                onClick={() => {
+                                    setGeneratedContent(null)
+                                    setSelectedProject(null)
+                                    setCompletedSteps([])
+                                    setCurrentStep('projects')
+                                }}
+                                className="w-full btn btn-ghost text-sm mt-3"
+                            >
+                                ↺ Generate for Another Project
+                            </button>
                         </div>
                     )}
                 </div>
