@@ -24,7 +24,9 @@ import {
     Clock,
     Calendar,
     ExternalLink,
-    Link2
+    Link2,
+    Sparkles,
+    Copy
 } from 'lucide-react'
 import { Project } from '@/lib/supabase/types'
 
@@ -115,6 +117,12 @@ export default function LoopsPage() {
     const [showAddContentModal, setShowAddContentModal] = useState<string | null>(null)
     const [expandedLoop, setExpandedLoop] = useState<string | null>(null)
     const [scrapingUrl, setScrapingUrl] = useState(false)
+
+    // Post preview state
+    const [showPostPreview, setShowPostPreview] = useState<{ loopId: string, itemId: string } | null>(null)
+    const [generatingPost, setGeneratingPost] = useState(false)
+    const [generatedPost, setGeneratedPost] = useState<string>('')
+    const [selectedPlatform, setSelectedPlatform] = useState<'x' | 'linkedin' | 'instagram'>('x')
 
     // New content form
     const [newContent, setNewContent] = useState({
@@ -264,6 +272,66 @@ export default function LoopsPage() {
         } finally {
             setScrapingUrl(false)
         }
+    }
+
+    // Generate a post for a content item
+    const generatePost = async (loopId: string, itemId: string) => {
+        const loop = loops.find(l => l.id === loopId)
+        const item = loop?.items.find(i => i.id === itemId)
+        const project = projects.find(p => p.id === selectedProject)
+
+        if (!item || !project) return
+
+        setGeneratingPost(true)
+        setGeneratedPost('')
+
+        try {
+            const response = await fetch('/api/generate-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: item.title,
+                    url: item.url,
+                    summary: item.summary,
+                    keyPoints: item.content,
+                    brandVoice: project.brand_voice,
+                    brandTone: project.brand_tone,
+                    emojiStyle: project.emoji_style,
+                    hashtags: project.default_hashtags,
+                    projectName: project.name,
+                    platform: selectedPlatform,
+                    previousPosts: item.previousPosts || []
+                })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                setGeneratedPost(data.post)
+            }
+        } catch (err) {
+            console.error('Error generating post:', err)
+        } finally {
+            setGeneratingPost(false)
+        }
+    }
+
+    // Save generated post to item's history
+    const savePostToHistory = (loopId: string, itemId: string, post: string) => {
+        const updatedLoops = loops.map(loop => {
+            if (loop.id !== loopId) return loop
+            return {
+                ...loop,
+                items: loop.items.map(item => {
+                    if (item.id !== itemId) return item
+                    return {
+                        ...item,
+                        previousPosts: [...(item.previousPosts || []), post],
+                        usageCount: item.usageCount + 1
+                    }
+                })
+            }
+        })
+        saveLoops(updatedLoops)
     }
 
     const getNextPostDate = (loop: ContentLoop) => {
@@ -524,6 +592,17 @@ export default function LoopsPage() {
                                                         Used {item.usageCount}x
                                                     </span>
                                                     <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setShowPostPreview({ loopId: loop.id, itemId: item.id })
+                                                            setGeneratedPost('')
+                                                        }}
+                                                        className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-[var(--primary)]/20 text-[var(--primary)] transition-all"
+                                                        title="Generate post"
+                                                    >
+                                                        <Sparkles className="w-4 h-4" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => removeContentFromLoop(loop.id, item.id)}
                                                         className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-500 transition-all"
                                                     >
@@ -779,6 +858,114 @@ export default function LoopsPage() {
                                     Add to Loop
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Post Preview Modal */}
+            {showPostPreview && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[var(--surface)] rounded-2xl max-w-lg w-full">
+                        <div className="p-6 border-b border-[var(--surface-border)]">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-[var(--foreground)]">Generate Post</h2>
+                                <button
+                                    onClick={() => setShowPostPreview(null)}
+                                    className="p-2 hover:bg-[var(--surface-hover)] rounded-lg"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Platform Selector */}
+                            <div>
+                                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+                                    Platform
+                                </label>
+                                <div className="flex gap-2">
+                                    {(['x', 'linkedin', 'instagram'] as const).map(platform => (
+                                        <button
+                                            key={platform}
+                                            onClick={() => setSelectedPlatform(platform)}
+                                            className={`px-4 py-2 rounded-lg capitalize ${selectedPlatform === platform
+                                                    ? 'bg-[var(--primary)] text-white'
+                                                    : 'bg-[var(--background)] text-[var(--foreground)]'
+                                                }`}
+                                        >
+                                            {platform === 'x' ? '𝕏 Twitter' : platform}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Generate Button */}
+                            <button
+                                onClick={() => generatePost(showPostPreview.loopId, showPostPreview.itemId)}
+                                disabled={generatingPost}
+                                className="w-full btn btn-primary"
+                            >
+                                {generatingPost ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-4 h-4" />
+                                        Generate {selectedPlatform === 'x' ? 'Tweet' : 'Post'}
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Generated Post Preview */}
+                            {generatedPost && (
+                                <div className="space-y-3">
+                                    <label className="block text-sm font-medium text-[var(--foreground)]">
+                                        Generated Post
+                                    </label>
+                                    <div className="p-4 bg-[var(--background)] rounded-xl border border-[var(--surface-border)]">
+                                        <p className="text-[var(--foreground)] whitespace-pre-wrap">
+                                            {generatedPost}
+                                        </p>
+                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--surface-border)]">
+                                            <span className="text-xs text-[var(--foreground-muted)]">
+                                                {generatedPost.length} characters
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(generatedPost)
+                                                    }}
+                                                    className="btn btn-ghost text-sm"
+                                                >
+                                                    <Copy className="w-4 h-4" />
+                                                    Copy
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        savePostToHistory(showPostPreview.loopId, showPostPreview.itemId, generatedPost)
+                                                        setShowPostPreview(null)
+                                                    }}
+                                                    className="btn btn-secondary text-sm"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    Use & Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => generatePost(showPostPreview.loopId, showPostPreview.itemId)}
+                                        className="w-full btn btn-ghost text-sm"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                        Generate Different Version
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -35,6 +35,9 @@ export interface Project {
     name: string
     description: string | null
     brand_voice: string | null
+    brand_tone: string | null // e.g. 'casual', 'professional', 'inspirational', 'educational'
+    emoji_style: string | null // e.g. 'heavy', 'minimal', 'none'
+    default_hashtags: string[] | null
     target_audience: string | null
     content_pillars: string[]
     platforms: Platform[]
