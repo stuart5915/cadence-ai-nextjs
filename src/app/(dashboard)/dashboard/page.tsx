@@ -201,6 +201,27 @@ export default function DashboardPage() {
             {/* Has Projects */}
             {projects.length > 0 && (
                 <>
+                    {/* Quick Flow CTA */}
+                    <Link
+                        href="/flow"
+                        className="card p-6 mb-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white hover:opacity-95 transition-opacity group"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold">Quick Flow</h3>
+                                    <p className="text-white/80 text-sm">
+                                        Generate a week of content in 3 simple steps
+                                    </p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </Link>
+
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         <StatCard
@@ -246,10 +267,10 @@ export default function DashboardPage() {
                                     <div
                                         key={day.date}
                                         className={`relative p-3 rounded-xl text-center transition-all ${day.isToday
-                                                ? 'bg-[var(--primary)] text-white'
-                                                : isGap
-                                                    ? 'bg-[var(--warning)]/10 border-2 border-dashed border-[var(--warning)]/50'
-                                                    : 'bg-[var(--surface)]'
+                                            ? 'bg-[var(--primary)] text-white'
+                                            : isGap
+                                                ? 'bg-[var(--warning)]/10 border-2 border-dashed border-[var(--warning)]/50'
+                                                : 'bg-[var(--surface)]'
                                             }`}
                                     >
                                         <div className={`text-xs font-medium ${day.isToday ? 'text-white/80' : 'text-[var(--foreground-muted)]'}`}>
@@ -360,8 +381,8 @@ export default function DashboardPage() {
                                                     >
                                                         <div
                                                             className={`h-8 rounded-md flex items-center justify-center transition-all ${hasContent
-                                                                    ? 'bg-[var(--primary)]'
-                                                                    : 'bg-[var(--surface)] border-2 border-dashed border-[var(--surface-border)]'
+                                                                ? 'bg-[var(--primary)]'
+                                                                : 'bg-[var(--surface)] border-2 border-dashed border-[var(--surface-border)]'
                                                                 } ${day.isToday ? 'ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--background-elevated)]' : ''}`}
                                                         >
                                                             {hasContent && (
